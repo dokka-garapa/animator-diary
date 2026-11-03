@@ -16,12 +16,16 @@ h1{font-size:18px;margin:4px 0 12px}
 .bar i{display:block;height:100%;background:var(--ac);transition:width .3s}
 button{display:block;width:100%;text-align:left;font:inherit;color:var(--bg);background:var(--ac);border:none;font-weight:600;border-radius:10px;padding:12px;margin:8px 0;cursor:pointer}
 button:active{opacity:.75}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+#lg{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+#lg button{width:auto;padding:4px 8px;margin:0;font-size:12px;border-radius:8px}
+#lg button.on{outline:2px solid var(--fg)}
 .day{color:var(--mu);font-size:13px}
 .res{color:var(--ac);font-size:14px}
 .big{font-size:20px;font-weight:700}
 </style></head><body><main>
-<h1>🎞 アニメーターあるある日記</h1>
-<p class="day">〆切までの10日間。笑って乗り切ろう！</p><div id="app"></div>
+<div class="top"><h1 id="ttl"></h1><div id="lg"></div></div>
+<p class="day" id="sub"></p><div id="app"></div>
 </main>
 <script>
 var EV=[
@@ -73,42 +77,225 @@ var AC=[
 ["ちょっと休憩して散歩","メンタル回復",function(){return{p:1,h:3,m:12}},"外の空気がおいしい。"]
 ];
 var S,ph,msg,ev;
+var L="ja",T={ja:{t:"🎞 アニメーターあるある日記",s:"〆切までの10日間。笑って乗り切ろう！",d:"{n} 日目 / 10 日（〆切まで）",p:"進捗",h:"体力",m:"メンタル",q:"今日の作業は？",n:"次の日へ",a:"もう一度あそぶ",w:["集中して原画を描く","雑談を交えながら原画を描く","仮眠する","ちょっと休憩して散歩"],x:["進捗 大 / 体力 大消費","進捗 中 / メンタル回復","体力回復","メンタル回復"]},
+en:{t:"🎞 Animator Life Diary",s:"10 days to the deadline. Laugh your way through!",d:"Day {n} / 10",p:"Progress",h:"Stamina",m:"Mental",q:"What will you do today?",n:"Next day",a:"Play again",w:["Focus on key animation","Draw while chatting","Take a nap","Take a break and a walk"],x:["Progress high / Stamina drain high","Progress medium / Mental recovers","Stamina recovers","Mental recovers"]},
+ko:{t:"🎞 애니메이터 공감 일기",s:"마감까지 10일. 웃으면서 버텨 봐요!",d:"{n}일째 / 10일",p:"진행도",h:"체력",m:"멘탈",q:"오늘은 뭘 할까요?",n:"다음 날로",a:"다시 하기",w:["집중해서 원화 그리기","수다 떨며 원화 그리기","낮잠 자기","잠깐 쉬며 산책하기"],x:["진행도 큼 / 체력 크게 소모","진행도 보통 / 멘탈 회복","체력 회복","멘탈 회복"]},
+zh:{t:"🎞 动画师共鸣日记",s:"距离截稿还有10天。笑着撑过去吧！",d:"第 {n} 天 / 10 天",p:"进度",h:"体力",m:"心态",q:"今天做什么？",n:"进入下一天",a:"再玩一次",w:["专心画原画","边聊天边画原画","小睡一会儿","稍作休息去散步"],x:["进度 大 / 体力消耗大","进度 中 / 心态恢复","恢复体力","恢复心态"]},
+fr:{t:"🎞 Journal d’un animateur",s:"10 jours avant la date limite. Gardez le sourire !",d:"Jour {n} / 10",p:"Progression",h:"Énergie",m:"Moral",q:"Que faire aujourd’hui ?",n:"Jour suivant",a:"Rejouer",w:["Se concentrer sur les dessins clés","Dessiner en discutant","Faire une sieste","Pause et petite promenade"],x:["Progression forte / Énergie très consommée","Progression moyenne / Le moral remonte","Récupère l’énergie","Récupère le moral"]}};
 function r(n){return Math.floor(Math.random()*n)}
 function cl(x){return Math.max(0,Math.min(100,x))}
 function start(){S={d:1,p:0,h:80,m:80};ph=0;msg="";ev=EV[r(EV.length)];draw()}
-function apply(f){S.p=cl(S.p+f.p);S.h=cl(S.h+f.h);S.m=cl(S.m+(f.m<0?Math.ceil(f.m/2):f.m))}
+function apply(f){S.p=cl(S.p+f.p);S.h=cl(S.h+f.h);S.m=cl(S.m+(f.m<0?Math.floor(f.m*1.5):f.m))}
 function bar(n,v){return '<div class="m"><span>'+n+'</span><div class="bar"><i style="width:'+v+'%"></i></div><b>'+v+'</b></div>'}
 function draw(){
  var a=document.getElementById("app"),h="";
  if(ph==9){a.innerHTML=ending();return}
- h+='<div class="card"><div class="day">'+S.d+' 日目 / 10 日（〆切まで）</div>'+bar("進捗",S.p)+bar("体力",S.h)+bar("メンタル",S.m)+'</div>';
+ h+='<div class="card"><div class="day">'+T[L].d.replace("{n}",S.d)+'</div>'+bar(T[L].p,S.p)+bar(T[L].h,S.h)+bar(T[L].m,S.m)+'</div>';
  if(ph==0){
-  h+='<div class="card">'+ev.t+'</div>';
-  ev.c.forEach(function(c,i){h+='<button onclick="pickE('+i+')">'+c[0]+'</button>'});
+  h+='<div class="card">'+eg(-1)+'</div>';
+  ev.c.forEach(function(c,i){h+='<button onclick="pickE('+i+')">'+eg(i,0)+'</button>'});
  }else if(ph==1){
-  h+='<div class="card res">'+msg+'</div><div class="card">今日の作業は？</div>';
-  AC.forEach(function(c,i){h+='<button onclick="pickA('+i+')">'+c[0]+'<br><small>'+c[1]+'</small></button>'});
+  h+='<div class="card res">'+msg+'</div><div class="card">'+T[L].q+'</div>';
+  AC.forEach(function(c,i){h+='<button onclick="pickA('+i+')">'+T[L].w[i]+'<br><small>'+T[L].x[i]+'</small></button>'});
  }else{
-  h+='<div class="card res">'+msg+'</div><button onclick="next()">次の日へ</button>';
+  h+='<div class="card res">'+msg+'</div><button onclick="next()">'+T[L].n+'</button>';
  }
  a.innerHTML=h;
 }
-function pickE(i){var c=ev.c[i];apply(c[1]);msg=c[2];ph=1;if(chk())return;draw()}
-function pickA(i){var c=AC[i],f=c[2]();apply(f);msg=c[3]+"（進捗 "+(f.p>=0?"+":"")+f.p+"）";ph=2;if(chk())return;draw()}
+function pickE(i){var c=ev.c[i];apply(c[1]);msg=eg(i,1);ph=1;if(chk())return;draw()}
+function pickA(i){var c=AC[i],f=c[2]();apply(f);msg=(L=="en"?RA[i]:L=="ko"?RK[i]:L=="zh"?RZ[i]:L=="fr"?RF[i]:c[3])+"（"+T[L].p+" "+(f.p>=0?"+":"")+f.p+"）";ph=2;if(chk())return;draw()}
 function chk(){if(S.p>=100||S.h<=0||S.m<=0){ph=9;draw();return true}return false}
 function next(){
- S.d++;S.h=cl(S.h-1);S.m=cl(S.m+2);
+ S.d++;S.h=cl(S.h-1);
  if(S.d>10){ph=9;draw();return}
  ev=EV[r(EV.length)];ph=0;if(chk())return;draw()
 }
 function ending(){
  var t,d;
- if(S.p<100&&(S.h<=0||S.m<=0)){t="机で寝落ちしてしまった…";d="気づいたら朝。誰かがそっと毛布をかけてくれていた。今日はゆっくり休んで、また描こう。"}
- else if(S.p>=100&&r(5)>0){var K=[["打ち上げでお腹いっぱい！","納品から数日後、打ち上げパーティに呼ばれた。美味しいご飯をたくさん食べて、笑って帰った。このためにがんばったのかも。"],["自分なりに大満足！","SNSで「神作画」と話題になったわけではない。でも、自分としてはある程度満足できるカットが描けた。それで十分、いい仕事だった。"],["「上手くなったね」","周りの人から「上手くなったね」と言われた。そして、次の仕事もすぐに振られた。うれしい悲鳴だ。"],["公式アカウントに切り抜かれた！","放送後、公式アカウントで自分の担当カットが切り抜かれていた。思わず画面の前で小さく拍手した。"]];var k=K[r(4)];t=k[0];d=k[1]}
- else if(S.p>=100&&S.h>=40&&S.m>=40){t="完璧な納品！";d="期日どおりに納品し、心もまだ元気。ここまでできたら、もう伝説のアニメーター。"}
- else if(S.p>=100){t="ギリギリ納品…";d="何とか間に合った。ふらふらだけど、エンドロールに自分の名前が出る日が楽しみだ。「もう辞める」と思っていたのに、納品の瞬間には爽快感で消えていた。"}
- else{t="あと一歩で間に合わず！";d="進捗 "+S.p+"％。制作さんの「…あと何カット残ってますか？」の声がやさしい。次はきっといける！"}
- return '<div class="card"><div class="big">'+t+'</div><p>'+d+'</p>'+bar("進捗",S.p)+bar("体力",S.h)+bar("メンタル",S.m)+'</div><button onclick="start()">もう一度あそぶ</button>';
+ if(S.p<100&&(S.h<=0||S.m<=0)){var Z=S.h<=0?[["机で寝落ちしてしまった…","気づいたら朝。誰かがそっと毛布をかけてくれていた。今日はゆっくり休んで、また描こう。"],["電池切れで爆睡！","電池が切れたように眠ってしまった。起きたら、枕元に差し入れのおにぎりが置いてあった。ありがたい。"],["強制お昼寝タイム","同僚に「今日はもう帰って寝な」と言われて、素直に帰宅。ふとんが天国のようにやわらかかった。"],["夢の中で作画","寝落ちした夢の中で、なぜか絵がすいすい描けた。起きたら、その感覚を忘れないうちにメモした。"],["ぐっすり休養","思い切って一日休むことにした。お風呂に浸かって、ご飯を食べて、よく寝た。復活したらまた描こう。"],["ストレッチ教室に入門","腰と肩が限界。思い切ってストレッチ教室に通うことにした。体がほぐれて、線もやわらかくなった気がする。"],["温泉でほっこり","体力ゼロで倒れこんだあと、温泉でゆっくり回復。湯上がりのコーヒー牛乳が世界一おいしかった。"],["仲間から差し入れの山","机に突っ伏していたら、周りから差し入れが集まった。お菓子の山を前に、笑いながら復活した。"],["新しい椅子を買った","腰が限界で、ついに高い椅子を購入。座った瞬間、天国かと思った。明日からの作業が楽しみ。"],["早寝早起き作戦","生活リズムを見直すことにした。朝日を浴びながら描く絵は、いつもより明るい線になった。"]]:[["ちょっと気分転換の旅","気持ちを切り替えようと、近くの温泉へ。湯けむりの中で「まあ、なんとかなるか」と思えた。"],["猫と過ごす一日","今日は描くのをやめて、ひたすら猫の動画を見て過ごした。猫は何も言わずに癒やしてくれる。"],["友だちに話を聞いてもらった","友だちとご飯に行って、愁痴を言いまくった。笑っているうちに、気持ちが軽くなっていた。"],["好きなアニメを一気見","気分転換に、大好きなアニメを一気見。やっぱりアニメっていいな、と思い出した。明日からまた描ける気がする。"],["ひとりカラオケ大会","思い切りひとりカラオケへ。叫んで歌ったら、頭の中がスッキリした。喉は枯れたけど、心は元気。"],["おいしいラーメンで復活","気分が沈んだときは、おいしいものを食べるに限る。熱々のラーメンの湯気で、心もほかほかになった。"],["お散歩で空を見上げた","外に出て空を見上げたら、雲がおいしそうな形だった。それだけで少し笑えた。"],["昔の原画を見返した","昔の自分の原画を見返して、「意外とがんばってたな」と思った。ちょっと自分を好きになれた。"],["同期とオンライン飲み会","同期と画面越しに愚痴を言い合った。みんな同じことで悩んでいて、笑いが止まらなかった。"],["ゆるい絵を描いてみた","仕事を忘れて、らくがきを描いてみた。思いつきの絵が、意外とかわいくできた。"]];var zi=r(10);var z=L=="en"?(S.h<=0?HE:ME)[zi]:L=="ko"?(S.h<=0?HK:MK)[zi]:L=="zh"?(S.h<=0?HZ:MZ)[zi]:L=="fr"?(S.h<=0?HF:MF)[zi]:Z[zi];t=z[0];d=z[1]}
+ else if(S.p>=100&&r(10)>0){var K=[["打ち上げでお腹いっぱい！","納品から数日後、打ち上げパーティに呼ばれた。美味しいご飯をたくさん食べて、笑って帰った。このためにがんばったのかも。"],["自分なりに大満足！","SNSで「神作画」と話題になったわけではない。でも、自分としてはある程度満足できるカットが描けた。それで十分、いい仕事だった。"],["「上手くなったね」","周りの人から「上手くなったね」と言われた。そして、次の仕事もすぐに振られた。うれしい悲鳴だ。"],["公式アカウントに切り抜かれた！","放送後、公式アカウントで自分の担当カットが切り抜かれていた。思わず画面の前で小さく拍手した。"],["ごほうびスイーツ！","納品後、ずっと我慢していた高級スイーツを買って帰った。ひと口食べて、思わず「勝った」とつぶやいた。"],["エンドロールに名前！","放送日、エンドロールに自分の名前を見つけた。何度見ても、じわっとうれしい。"],["ぐっすり3日間","納品後、予定を何も入れずに3日間ゴロゴロした。幸せな時間だった。"],["先輩から差し入れ","「お疲れさま」と先輩からあたたかい差し入れが届いた。この仕事、続けてきてよかった。"],["次の作品が待っている","「次もお願い」と連絡が来た。うれしい悲鳴をあげつつ、もう新しいカットを想像していた。"]];var ki=r(K.length);var k=L=="en"?KE[ki]:L=="ko"?KK[ki]:L=="zh"?KZ[ki]:L=="fr"?KF[ki]:K[ki];t=k[0];d=k[1]}
+ else if(S.p>=100&&S.h>=40&&S.m>=40){t=L=="en"?"Perfect delivery!":L=="ko"?"완벽한 납품!":L=="zh"?"完美交稿！":L=="fr"?"Livraison parfaite !":"完璧な納品！";d=L=="en"?"Delivered on time, and still in good spirits. You are practically a legendary animator.":L=="ko"?"기한 내에 납품했고 마음도 아직 쌩쌩하다. 이쯤이면 전설의 애니메이터다.":L=="zh"?"按期交稿，精神也还很好。这下可以说是传说级的动画师了。":L=="fr"?"Livré à temps, et toujours en forme. Tu es presque un animateur de légende.":"期日どおりに納品し、心もまだ元気。ここまでできたら、もう伝説のアニメーター。"}
+ else if(S.p>=100){t=L=="en"?"Just in time…":L=="ko"?"아슬아슬 납품…":L=="zh"?"勉强赶上…":L=="fr"?"Juste à temps…":"ギリギリ納品…";d=L=="en"?"Barely made it. You are wobbly, but you look forward to seeing your name in the credits. The urge to quit vanished in a rush of relief at delivery.":L=="ko"?"간신히 맞췄다. 비틀거리지만 크레딧에 내 이름이 나올 날이 기대된다. “그만둘 거야”라는 마음은 납품 순간의 후련함에 사라졌다.":L=="zh"?"总算赶上了。虽然摇摇晃晃，但很期待在片尾字幕里看到自己的名字。“我要辞职”的念头，在交稿的瞬间被畅快感冲得无影无踪。":L=="fr"?"Tu as tenu de justesse. Tu chancelles, mais tu as hâte de voir ton nom au générique. L’envie de démissionner s’est évaporée dans le soulagement de la livraison.":"何とか間に合った。ふらふらだけど、エンドロールに自分の名前が出る日が楽しみだ。「もう辞める」と思っていたのに、納品の瞬間には爽快感で消えていた。"}
+ else{t=L=="en"?"So close!":L=="ko"?"아쉽게 못 맞췄다!":L=="zh"?"差一点就赶上了！":L=="fr"?"Presque réussi !":"あと一歩で間に合わず！";d=L=="en"?"Progress "+S.p+"%. The producer’s “…how many cuts are left?” sounded kind. Next time for sure!":L=="ko"?"진행도 "+S.p+"%. 제작의 “…남은 컷이 몇 개죠?”라는 목소리가 다정했다. 다음엔 꼭 해낼 수 있다!":L=="zh"?"进度 "+S.p+"%。制作那句“……还剩几个镜头？”的声音很温柔。下次一定可以！":L=="fr"?"Progression "+S.p+" %. Le « …Il reste combien de plans ? » de la production était bienveillant. La prochaine fois, c’est sûr !":"進捗 "+S.p+"％。制作さんの「…あと何カット残ってますか？」の声がやさしい。次はきっといける！"}
+ return '<div class="card"><div class="big">'+t+'</div><p>'+d+'</p>'+bar(T[L].p,S.p)+bar(T[L].h,S.h)+bar(T[L].m,S.m)+'</div><button onclick="start()">'+T[L].a+'</button>';
 }
-start();
+var RA=["The lines flowed.","Laughing along the way, your hands kept moving.","You meant to nap for 30 minutes. It was two hours.","The fresh air tastes great."];
+var EN=[["The animation director sent corrections: “Add a bit more acting here.”",["Fix it obediently","It really did look better. Kind of annoying."],["Submit it and trust it will pass","It came back as a retake."]],
+["The producer messaged: “How is it going?”",["Say “About 80% done”","It is really 30%. Your heart hurts a little."],["Honestly say “30%”","The reply: “…Let us do our best.”"]],
+["You opened YouTube for reference. Suddenly you are watching cat videos.",["Watch to the end","Cats are justice. Then you checked the clock and went pale."],["Close it right away","Admirable. But you wanted to see the cats."]],
+["The software crashed. When did you last save?",["Redo it in tears","The second time was faster than the first. Somehow."],["You had actually saved often","Thank you, past self."]],
+["2 a.m. The convenience store lights feel oddly kind.",["Buy an energy drink and go back","Eyes wide awake, but tomorrow looks scary."],["Go home and sleep","The futon is soft."]],
+["Your right wrist feels heavy. Tendon trouble is coming.",["Use a patch and stretch","A little better."],["Push through","You drew it. But your hand is screaming."]],
+["A message the night before: “The cut order changed.”",["Quietly deal with it","You rechecked every exposure sheet."],["Say “Nobody told me…” and collapse on the desk","Revived after thirty seconds."]],
+["A friend said, “Animation work sounds fun!”",["Smile and say “It is fun”","You remembered the truly fun moments."],["Say “It is fun, but the time…”","Once you started, you could not stop talking."]],
+["A coworker left a treat on your desk: “Eat this.”",["Gratefully accept","Sugar spreads through your whole body."],["Say “Later…” and leave it","Before you knew it, it was gone."]],
+["The producer messaged: “The seconds on this cut’s exposure sheet look wrong.”",["Apologize and fix it","You mixed it up with the next cut’s seconds. A helpful catch."],["Say “Huh, it should be right…” and recheck","On recheck, you had mixed it up with the next cut’s seconds."]],
+["Having fun, you drew the key animation in dense detail.",["Submit it as is","It came back: “The inbetweeners are crying. Please reduce it.”"],["Reduce the lines and simplify","The inbetweeners are saved. Everyone is happy."]],
+["You are stuck on a previous artist’s key drawing. What did they draw?",["Decode it by deduction","Solving the mystery feels a little good."],["Go ask the animation director","The reply: “Oh, I do not get that one either.”"]],
+["You wanted a pose reference and are striking odd poses in front of a mirror.",["Photograph it with your phone","Photos nobody can see are piling up. But it is easier to draw."],["Draw from imagination","The joints look wrong. You should have taken photos."]],
+["You opened social media and a colleague’s amazing drawing floated by.",["Get inspired and fired up","Right, time to draw too."],["Compare yourself and feel down","Everyone is amazing. But your lines are not bad either."]],
+["Your midnight cup noodles are ready. While waiting three minutes, you began drawing.",["Keep drawing","The noodles got soggy. But you made progress."],["Wait properly and eat","Noodles that are not soggy are, of course, delicious."]],
+["Retakes on every cut. Your desk is covered in sticky notes.",["Fix them one by one, carefully","The drawings improved with each fix. Probably."],["First, breathe and drink tea","You calmed down. The sticky notes did not decrease."]],
+["Suddenly in top form! Your hand moves on its own and the acting flows.",["Ride the wave","You liked today’s cut yourself."],["Save once, then continue","Saving matters. The flow did not break."]],
+["The anime you put on for background caught your attention and your hand stopped.",["Watch one episode to the end","You got absorbed in the animation. This is study too, probably."],["Listen to the sound only and return to work","Enjoy with your ears. That is enough for today."]],
+["Your ruler and eraser vanished from your desk.",["Search everywhere","They were right in front of you after all."],["Make do with substitutes","You just cannot settle without your usual tools."]],
+["While looking for references, you wandered into a sea of related videos.",["Look just a little more","Three hours passed. You forgot what you were searching for."],["Stop after 30 minutes and start drawing","The references are lacking, but you will figure it out by drawing."]],
+["You had a great idea before bed… and cannot remember it in the morning.",["Slept without taking notes","Where did that composition go?"],["Slept with a memo by the pillow","In the morning you could not read the handwriting. But something remained."]],
+["Your key animation went poorly, and the cut was reassigned to someone else.",["Accept it honestly","Less work, so progress moves. But it stings. Use it next time."],["Practice at night out of frustration","What you drew will make you a little better… probably."]],
+["A cut beyond your skill arrived. You write to the producer.",["Send “Sorry. I cannot do this.”","It took three hours to press send."],["Take it on anyway","In the end, you drew it in agony."]],
+["You took on several jobs at once, and all the deadlines are closing in.",["Try to do everything","Everything is half done. You sense you will not make it."],["Prioritize and tell them","To your surprise, they adjusted things after you spoke honestly."]],
+["Right after taking a low-paying job, a high-paying job request came in.",["Reluctantly decline","Your hand shook a little while drawing the low-paying one."],["Secretly take it on","Your workload grew, and neither job moves forward."]],
+["You redid the retake, but it came back again. In a meeting: “Do you even have motivation?”",["Answer “I do”","I do, but my skill has not caught up."],["Desperately note down the advice","Taking notes made you feel a little more positive."]],
+["While working, you thought hard: “I will quit when this job is over.”",["Turn that feeling into energy","Quit after this. …What happens after this, again?"],["Go to bed and forget it for now","By morning, you felt a little lighter."]],
+["Someone asked: “Is being an animator fun?”",["Answer “…Yeah, kind of.”","You cannot affirm it strongly, but you cannot deny it either."],["Smile: “It is fun sometimes.”","That honest answer reassured even you a little."]],
+["Working on paper, you shook the cut bag and thought you heard money jingling.",["Even if I imagined it, it feels good","Cha-ching. Probably my imagination. But hey, even a low rate adds up, bit by bit."],["Add it to your finished-cuts memo","You added the finished cut to the list. Watching it grow calms you down."]],
+["A word from the animation director: “Nice acting here.”",["Thank them, blushing","You will draw in a good mood all day."],["Grin without showing it","You remembered it at home and grinned again."]],
+["An anime you worked on aired. You found viewers’ reactions on social media.",["Read them with a pounding heart","One comment, “The animation was great,” made it all worth it."],["Quietly scroll past and close it","Embarrassing, but a little happy."]],
+["A famous director praised you: “That cut was great.”",["Rewatch the director’s work","The timing of that acting is truly amazing."],["Write it down as notes","You wrote down their words. Reread them on tough days."]],
+["There is apparently a preview screening for a Blu-ray release of an anime you love.",["Apply, even if you may not make it","You pressed Apply. If you win, you will talk it over with the deadline."],["Celebrate alone with a drink","A solo toast with your favorite anime as the snack. Draw again tomorrow."]],
+["You came up with acting that is not in the storyboard.",["Sneak it in","Not sure if it passed, but drawing it was fun."],["Hold back, lacking confidence","You quietly erased it. But that acting was a bit of a waste."]],
+["A fan posted a screenshot of a cut you did the key animation for.",["Screenshot that post","Your “mood booster” folder gained one more image."],["Do a victory pump in your heart","Poker-faced outside, fist pumping inside."]],
+["You went to see an anime film and it was wonderful. The credits started rolling.",["Follow the names carefully with your eyes","You found the name of a senior who had quit, and felt relieved."],["Do not watch the credits","You put peace of mind first and praised yourself for it."]],
+["Before you knew it, you were into cooking.",["Look forward to what to cook each day","Opening the fridge is fun. Progress slowed a little."],["Prioritize work and cook less elaborately","You got by with simple meals. A little lonely."]],
+["You bought a TV and noticed motion interpolation is ON by default.",["Reluctantly leave it as is","Watching the smooth motion, something inside you cried a little."],["Cannot stand it, so turn it OFF at all costs","An hour hunting through settings. But the correct motion is back."]],
+["A junior said they did not understand something… and you did not either.",["Say “Let us ask someone later” and move on","It worked out for the moment. You will quietly look it up later."],["Want to know too, so ask a senior","Admitting you did not know took some courage. But you learned together."]],
+["You need the bathroom. But your pen is on a roll right now.",["Hold it and keep drawing","You drew up to a good point. Standing up, everything was at its limit."],["Go properly","Refreshed. Your lines feel refreshed too."]]];
+function eg(k,j){var X=L=="en"?EN[EV.indexOf(ev)]:L=="ko"?KO[EV.indexOf(ev)]:L=="zh"?ZH[EV.indexOf(ev)]:L=="fr"?FR[EV.indexOf(ev)]:0;if(k<0)return X?X[0]:ev.t;return X?X[1+k][j?1:0]:ev.c[k][j?2:0]}
+var KE=[["Wrap party feast!","A few days later, you were invited to the wrap party. You ate delicious food until you were stuffed and went home smiling. Maybe this is what you worked for."],["Satisfied in your own way!","It did not go viral as “god-tier animation.” But you were reasonably happy with your cut, and that is plenty."],["“You have improved!”","People said, “You have gotten better.” Right away, you were offered the next job. A happy problem."],["Featured by the official account!","After broadcast, the official account clipped your cut. You quietly applauded in front of the screen."],["Sweet reward!","After delivery, you bought the fancy dessert you had been saving. One bite and you muttered, “I won.”"],["Your name in the credits!","On air day you spotted your name in the credits. No matter how many times you look, it warms your heart."],["Three days of nothing","After delivery you scheduled nothing and lounged for three days. Pure bliss."],["Treats from a senior","A senior sent a warm “good work” treat. You are glad you kept going."],["Next project awaits","A message arrived: “Please do the next one too.” You squealed happily and were already picturing new cuts."]];
+var HE=[["Asleep at the desk…","You woke up to morning, with a blanket someone had gently placed on you. Rest today, then draw again."],["Battery dead, deep sleep!","You dropped off like a dead battery. When you woke, a rice ball treat sat by your pillow. So thoughtful."],["Forced nap time","A coworker said, “Go home and sleep today.” You obeyed, and the futon felt like heaven."],["Drawing in dreams","In your dream, drawing was effortless. You jotted down the feeling before it faded."],["A proper rest","You took a day off: a long bath, a good meal, a long sleep. Back to drawing once recovered."],["Joined a stretch class","Your back and shoulders were done. You joined a stretch class, and your lines seem softer now."],["Hot spring bliss","After collapsing, you recovered in a hot spring. The coffee milk afterward was the best in the world."],["Mountain of treats","While slumped at your desk, treats piled up from everyone. You recovered laughing at the snack mountain."],["New chair","With your back at its limit, you finally bought a good chair. The moment you sat, it felt like heaven. You look forward to tomorrow."],["Early to bed, early to rise","You rethought your daily rhythm. Drawing in the morning sun gave your lines a brighter feel."]];
+var ME=[["A little getaway","To reset your mind, you went to a nearby hot spring. In the steam you thought, “It will work out.”"],["A day with cats","You stopped drawing and watched cat videos all day. Cats comfort you without saying a word."],["A friend listened","You had dinner with a friend and vented to your heart’s content. Laughing, you felt lighter."],["Anime marathon","To refresh, you binged your favorite anime. You remembered how great anime is. You feel ready to draw tomorrow."],["Solo karaoke","You went to karaoke alone and sang your heart out. Your head cleared. Hoarse throat, happy heart."],["Revived by ramen","When you feel down, delicious food helps. The steam from hot ramen warmed your heart too."],["Looking up at the sky","You stepped outside and looked up. A cloud looked tasty. That alone made you smile."],["Old key drawings","Looking back at your old drawings, you thought, “I worked hard.” You liked yourself a little more."],["Online drinks with peers","You and your peers vented over video. Everyone struggled with the same things, and you could not stop laughing."],["A relaxed doodle","Forgetting work, you doodled. The spontaneous drawing turned out surprisingly cute."]];
+var RK=["선이 술술 나왔다.","수다를 떨면서도 손은 제대로 움직였다.","30분만 잘 생각이었는데 2시간이 지났다.","바깥 공기가 맛있다."];
+var KO=[["작화감독에게 수정 요청이 왔다. “여기, 연기를 좀 더 넣어 줘.”",["순순히 고친다","고치니 확실히 나아졌다. 조금 분하다."],["“이대로 통과될 거야”라고 믿고 제출한다","리테이크로 돌아왔다."]],
+["제작 진행에게서 연락이 왔다. “지금 어떤가요~?”",["“80%입니다”라고 답한다","사실은 30%. 마음이 조금 아프다."],["솔직히 “30%예요”라고 말한다","“…힘내 봐요”라는 답이 왔다."]],
+["자료를 찾으려고 유튜브를 열었다. 어느새 고양이 영상을 보고 있다.",["끝까지 본다","고양이는 정의다. 하지만 시계를 보고 얼굴이 창백해졌다."],["바로 닫는다","대단하다. 하지만 고양이는 보고 싶었다."]],
+["소프트웨어가 갑자기 꺼졌다. 마지막으로 저장한 게 언제였더라?",["울면서 다시 한다","두 번째가 첫 번째보다 빨랐다. 왜일까."],["사실 자주 저장했다","과거의 나, 고마워."]],
+["새벽 2시. 편의점 불빛이 왠지 다정하다.",["에너지 드링크를 사서 돌아간다","눈은 말똥하지만 내일이 걱정이다."],["오늘은 집에 가서 잔다","이불이 폭신하다."]],
+["오른쪽 손목이 무겁다. 건초염의 예감이 든다.",["파스를 붙이고 스트레칭한다","조금 나아졌다."],["정신력으로 그린다","그렸다. 하지만 손이 비명을 지르고 있다."]],
+["전날 밤에 연락이 왔다. “컷 순서가 바뀌었어요.”",["말없이 대응한다","타임시트를 전부 다시 확인했다."],["“못 들었는데…” 하며 책상에 엎드린다","30초만 쉬고 되살아났다."]],
+["친구가 말했다. “애니메이션 일 재미있겠다!”",["“재미있어”라며 웃는다","정말 즐거웠던 순간이 떠올랐다."],["“재미있지만 시간이…” 하고 털어놓는다","한 번 말하기 시작하니 멈출 수 없었다."]],
+["동료가 간식을 책상에 놓아 두었다. “이거 먹어.”",["고맙게 먹는다","당분이 온몸에 스며든다."],["“나중에…” 하고 책상에 둔다","정신 차리니 빈 봉지만 남았다."]],
+["제작 쪽에서 연락이 왔다. “이 컷, 타임시트 초수가 안 맞아요.”",["거듭 사과하며 고친다","다음 컷과 초수를 헷갈렸다. 고마운 지적."],["“어, 맞을 텐데…” 하며 다시 본다","다시 보니 정말 다음 컷과 초수를 헷갈렸다."]],
+["신나서 원화를 빽빽하게 그려 버렸다.",["그대로 낸다","“동화 담당이 울어요, 줄여 주세요”라고 돌아왔다."],["선을 줄여 심플하게 한다","동화 담당이 살았다. 모두가 행복해진다."]],
+["앞사람의 원화를 보고 굳었다. 뭘 그린 건지 모르겠다.",["추리하며 해독한다","수수께끼를 풀면 조금 기분이 좋다."],["작화감독에게 물으러 간다","“아, 그거 나도 몰라”라는 답이 돌아왔다."]],
+["포즈 자료가 필요해서 거울 앞에서 이상한 포즈를 취하고 있다.",["폰으로 찍어서 참고한다","아무에게도 못 보여 줄 사진이 늘었다. 하지만 그리기는 쉽다."],["상상으로 그린다","관절이 이상하다. 역시 찍을걸."]],
+["SNS를 열었더니 동업자의 신작화가 흘러왔다.",["자극받아 의욕이 생긴다","좋아, 나도 그리자."],["나와 비교하며 우울해진다","다들 너무 대단하다. 하지만 내 선도 나쁘지 않다."]],
+["야식 컵라면이 완성됐다. 3분 기다리는 사이 그림을 그리기 시작했다.",["그대로 계속 그린다","정신 차리니 면이 불어 있었다. 하지만 진도는 나갔다."],["제대로 기다렸다 먹는다","불지 않은 면은 역시 맛있다."]],
+["전 컷에 리테이크가 들어왔다. 책상 위가 포스트잇투성이다.",["하나씩 꼼꼼히 고친다","고친 만큼 그림이 좋아졌다. 아마도."],["우선 심호흡하고 차를 마신다","진정됐다. 그리고 포스트잇은 줄지 않았다."]],
+["갑자기 컨디션 최고! 손이 알아서 움직이고 연기가 술술 나온다.",["이 파도를 탄다","오늘 컷은 스스로도 마음에 들었다."],["한 번 저장하고 이어 간다","저장은 중요하다. 흐름도 끊기지 않았다."]],
+["작업용으로 틀어 둔 애니가 신경 쓰여 손이 멈췄다.",["한 화만 끝까지 본다","작화에 빠져들었다. 이것도 공부, 아마도."],["소리만 듣고 작업으로 돌아온다","귀로 즐긴다. 오늘은 이걸로 충분하다."]],
+["자와 지우개가 책상에서 행방불명이다.",["찾아 헤맨다","결국 바로 눈앞에 놓여 있었다."],["대신 다른 걸 써서 버틴다","익숙한 도구가 아니면 마음이 안 놓인다."]],
+["자료를 찾다가 관련 영상의 바다에서 길을 잃었다.",["조금만 더 찾아본다","정신 차리니 3시간. 뭘 찾고 있었는지 잊었다."],["30분에서 끊고 그리기 시작한다","자료는 부족하지만 그리면 알게 된다."]],
+["자기 전에 좋은 아이디어가 떠올랐다… 아침에 일어나니 기억나지 않는다.",["메모 없이 자 버렸다","그 구도는 어디로 갔을까."],["머리맡에 메모를 두고 잤다","아침에 보니 글씨를 읽을 수 없었다. 그래도 뭔가는 남았다."]],
+["원화가 잘 안 돼서 다른 사람에게 넘기게 됐다.",["순순히 받아들인다","일이 줄어 진행도는 오른다. 하지만 분하다. 다음에 살리자."],["분해서 밤에 혼자 연습한다","그린 만큼 조금은 늘 것이다… 아마도."]],
+["내 실력으로는 어려운 컷이 왔다. 제작에게 메일을 쓴다.",["“죄송합니다. 못 하겠습니다.”라고 보낸다","전송 버튼을 누르기까지 3시간이 걸렸다."],["무리해서 받는다","결국 괴로워하며 그리게 됐다."]],
+["일을 동시에 여러 개 받았더니 마감이 전부 다가왔다.",["전부 하려고 한다","전부 어중간하다. 못 맞출 예감이 든다."],["우선순위를 정해 연락한다","솔직히 상담했더니 의외로 조정해 줬다."]],
+["단가가 낮은 일을 받은 직후, 단가가 높은 일 의뢰가 왔다.",["눈물을 머금고 거절한다","낮은 단가의 일을 그리는 손이 조금 떨렸다."],["몰래 받는다","할 일이 늘어 둘 다 진도가 안 나간다."]],
+["리테이크를 고쳤는데 또 돌아와서 면담. “의욕은 있는 거야?”",["“있습니다”라고 답한다","있지만 기술이 따라가지 못한다."],["조언을 필사적으로 메모한다","메모하니 조금은 긍정적이 됐다."]],
+["작업 중 강하게 생각했다. “이 일 끝나면 그만둔다.”",["그 마음을 힘으로 바꾼다","끝나면 그만둔다. …끝나면 어떻게 되더라?"],["이불에 들어가 일단 잊는다","다음 날 아침엔 마음이 조금 가벼워졌다."]],
+["누군가 물었다. “애니메이터 재밌어?”",["“…응, 뭐.”라고 답한다","강하게 긍정은 못 해도 부정도 못 한다."],["“재밌을 때도 있어”라며 웃는다","솔직한 대답에 나 스스로도 조금 안심했다."]],
+["종이로 작업하다 컷 봉투를 흔들었더니 돈 소리가 난 것 같았다.",["환청이라도 기쁘다","짤랑. 기분 탓. 그래도, 단가가 낮아도 티끌 모아 태산이라 생각했다."],["작업 완료 목록 메모에 적어 넣는다","끝낸 컷을 목록에 적었다. 늘어나는 걸 보면 마음이 차분해진다."]],
+["작화감독의 한마디. “여기, 연기 좋네.”",["쑥스러워하며 감사 인사를 한다","오늘은 하루 종일 기분 좋게 그릴 수 있다."],["겉으로는 티 내지 않고 히죽거린다","집에서 떠올리고 또 히죽거렸다."]],
+["내가 참여한 애니가 방영됐다. SNS에서 감상평을 발견했다.",["두근거리며 읽는다","“작화가 좋았다”는 한마디에 모든 게 보상받았다."],["살며시 스크롤해서 닫는다","쑥스럽지만 조금 기쁘다."]],
+["이름난 감독에게 칭찬받았다. “그 컷, 좋았어요.”",["감독의 작품을 다시 본다","그 연기의 호흡, 역시 대단하다."],["글로 적어 메모를 남긴다","들은 말을 적어 두었다. 힘든 날 다시 읽자."]],
+["좋아하는 애니의 블루레이 발매 시사회가 있다고 한다.",["갈 수 있을지 모르지만 응모한다","응모 버튼을 눌렀다. 당첨되면 마감과 상의하자."],["혼자서 축하주를 마신다","좋아하는 애니를 안주 삼아 혼자 건배. 내일도 그리자."]],
+["콘티에 없는 연기가 떠올랐다.",["몰래 넣어 본다","통과됐는지는 모르지만 그리면서 즐거웠다."],["자신이 없어서 그만둔다","살며시 지웠다. 그래도 그 연기는 조금 아깝다."]],
+["SNS에, 내가 원화를 맡은 컷의 스크린샷을 올린 팬이 있었다.",["그 게시물을 스크린샷한다","‘힘나는 이미지’ 폴더에 또 한 장이 늘었다."],["마음속으로 주먹을 불끈 쥔다","겉으론 무표정, 속으론 전력으로 주먹을 치켜들었다."]],
+["애니메이션 영화를 보러 왔는데 아주 좋았다. 크레딧이 올라가기 시작했다.",["이름을 눈으로 꼼꼼히 쫓는다","예전에 그만둔 선배의 이름을 찾고 안도했다."],["크레딧은 보지 않는다","마음의 평안을 우선했다며 스스로를 칭찬했다."]],
+["정신 차리니 요리에 빠져 있었다.",["매일 뭘 만들지 기대된다","냉장고를 여는 게 즐겁다. 진행도는 조금 늦어졌다."],["일 진행을 우선해 공들인 요리는 줄인다","간단한 밥으로 버텼다. 조금 쓸쓸하다."]],
+["TV를 샀더니 자동 보간 프레임 기능이 기본으로 켜져 있었다.",["눈물을 머금고 그대로 둔다","부드럽게 움직이는 화면을 보며 마음속 무언가가 작게 울었다."],["참을 수 없어서 어떻게든 끈다","설정 화면을 1시간 뒤졌다. 하지만 올바른 움직임이 돌아왔다."]],
+["후배가 모르는 게 있다고 했다. …나도 몰랐다.",["“나중에 알아보자” 하며 그 자리는 넘긴다","그 자리는 어떻게든 됐다. 나중에 몰래 찾아보자."],["나도 알고 싶어서 선배에게 확인한다","모른다고 말하기엔 용기가 필요했다. 그래도 함께 배웠다."]],
+["화장실에 가고 싶다. 하지만 지금 한창 손이 풀렸다.",["참고 계속 그린다","좋은 데까지 그렸다. 일어서니 모든 게 한계였다."],["제대로 다녀온다","시원하다. 선도 시원해진 기분이 든다."]]];
+var KK=[["뒤풀이 대잔치!","며칠 뒤 뒤풀이에 초대받았다. 맛있는 밥을 배불리 먹고 웃으며 돌아왔다. 이걸 위해 열심히 했는지도."],["나름대로 대만족!","SNS에서 ‘신작화’로 화제가 된 건 아니다. 그래도 내가 보기엔 꽤 만족스러운 컷을 그렸다. 그거면 충분하다."],["“실력 늘었네”","주변에서 “실력 늘었네”라는 말을 들었다. 그리고 곧바로 다음 일이 들어왔다. 행복한 비명이다."],["공식 계정에 짤렸다!","방영 후, 공식 계정에 내가 맡은 컷이 올라왔다. 나도 모르게 화면 앞에서 조용히 박수를 쳤다."],["보상 디저트!","납품 후, 참아 왔던 고급 디저트를 사 왔다. 한 입 먹고 “이겼다”라고 중얼거렸다."],["크레딧에 내 이름!","방송일, 크레딧에서 내 이름을 찾았다. 몇 번을 봐도 마음이 따뜻해진다."],["사흘간 푹 쉬기","납품 후 일정을 하나도 넣지 않고 사흘간 뒹굴었다. 행복한 시간이었다."],["선배의 간식","“수고했어”라며 선배가 따뜻한 간식을 보내 줬다. 이 일, 계속해 오길 잘했다."],["다음 작품이 기다린다","“다음에도 부탁해요”라는 연락이 왔다. 행복한 비명을 지르면서 벌써 새 컷을 상상하고 있었다."]];
+var HK=[["책상에서 잠들어 버렸다…","정신 차리니 아침. 누군가 살며시 담요를 덮어 줬다. 오늘은 푹 쉬고 다시 그리자."],["배터리 방전, 숙면!","방전된 것처럼 잠들었다. 일어났더니 머리맡에 주먹밥이 놓여 있었다. 고맙다."],["강제 낮잠 시간","동료가 “오늘은 집에 가서 자”라고 했다. 순순히 귀가하니 이불이 천국 같았다."],["꿈속에서 작화","잠든 꿈속에서 어째서인지 그림이 술술 그려졌다. 일어나서 그 감각을 잊기 전에 메모했다."],["푹 쉬기","과감히 하루 쉬기로 했다. 목욕하고 밥 먹고 푹 잤다. 회복하면 다시 그리자."],["스트레칭 교실 입문","허리와 어깨가 한계. 큰맘 먹고 스트레칭 교실에 다니기로 했다. 몸이 풀리니 선도 부드러워진 기분이다."],["온천에서 포근하게","체력이 바닥나 쓰러진 뒤 온천에서 천천히 회복했다. 목욕 후 커피우유가 세상에서 제일 맛있었다."],["간식 산","책상에 엎드려 있었더니 주위에서 간식이 모였다. 과자 산을 앞에 두고 웃으며 회복했다."],["새 의자를 샀다","허리가 한계라 마침내 비싼 의자를 샀다. 앉는 순간 천국인 줄 알았다. 내일 작업이 기대된다."],["일찍 자고 일찍 일어나기","생활 리듬을 돌아보기로 했다. 아침 햇살을 받으며 그린 그림은 평소보다 밝은 선이 됐다."]];
+var MK=[["기분 전환 여행","마음을 다잡으려고 근처 온천에 갔다. 김 속에서 “뭐, 어떻게든 되겠지”라고 생각했다."],["고양이와 보내는 하루","오늘은 그리기를 멈추고 오로지 고양이 영상만 봤다. 고양이는 아무 말 없이 위로해 준다."],["친구가 이야기를 들어줬다","친구와 밥을 먹으며 신나게 푸념했다. 웃다 보니 마음이 가벼워졌다."],["좋아하는 애니 정주행","기분 전환으로 아주 좋아하는 애니를 정주행했다. 역시 애니메이션은 좋구나 하고 떠올렸다. 내일부터 다시 그릴 수 있을 것 같다."],["혼자 노래방 대회","큰맘 먹고 혼자 노래방에 갔다. 소리 지르며 불렀더니 머릿속이 시원해졌다. 목은 쉬었지만 마음은 쌩쌩하다."],["라멘으로 부활","기분이 가라앉을 땐 맛있는 걸 먹는 게 최고다. 뜨끈한 라멘 김에 마음도 따뜻해졌다."],["산책하며 하늘을 올려다봤다","밖에 나가 하늘을 올려다봤더니 구름이 맛있어 보이는 모양이었다. 그것만으로 조금 웃었다."],["옛날 원화를 돌아봤다","옛날 내 원화를 보고 “의외로 열심히 했네”라고 생각했다. 나 자신이 조금 좋아졌다."],["동기와 온라인 술자리","동기와 화면 너머로 푸념을 나눴다. 다들 같은 걸로 고민하고 있어서 웃음이 멈추지 않았다."],["느슨한 그림을 그려 봤다","일을 잊고 낙서를 그려 봤다. 즉흥으로 그린 그림이 의외로 귀엽게 나왔다."]];
+var RZ=["线条一气呵成。","一边聊天，手也没停下来。","本想只睡30分钟，结果睡了2个小时。","外面的空气真好。"];
+var ZH=[["作画监督提出了修改意见：“这里再加点表演。”",["老老实实改","改完确实更好了。有点不甘心。"],["相信“这样能过”，直接交上去","被打回来重改了。"]],
+["制作进行发来消息：“现在进展如何～？”",["回答“完成八成了”","其实只有三成。心里有点痛。"],["老实说“三成”","回复是：“……一起加油吧。”"]],
+["为了找资料打开了视频网站。回过神来已经在看猫咪视频了。",["看到最后","猫咪就是正义。可是一看时间，脸都白了。"],["马上关掉","真了不起。可是其实很想看猫。"]],
+["软件突然崩溃了。上次保存是什么时候来着？",["哭着重做","第二遍比第一遍快。不知为什么。"],["其实一直有勤保存","过去的我，谢谢你。"]],
+["凌晨两点。便利店的灯光莫名温柔。",["买瓶能量饮料回去","精神了，但明天让人担心。"],["今天回家睡觉","被窝好软。"]],
+["右手腕沉沉的。有腱鞘炎的预感。",["贴膏药再拉伸","舒服了一点。"],["靠意志力硬画","画完了。可手在尖叫。"]],
+["前一天晚上收到消息：“镜头顺序变了。”",["默默应对","把摄影表全部重新检查了一遍。"],["说着“没人告诉我啊……”趴在桌上","只趴了三十秒就满血复活。"]],
+["朋友说：“做动画的工作感觉好有趣！”",["笑着说“很有趣”","想起了真正快乐的瞬间。"],["说“有趣是有趣，就是时间……”","一开口就停不下来。"]],
+["同事把零食放在你桌上：“吃点这个。”",["感激地收下","糖分渗透全身。"],["说“等会儿……”放在桌上","回过神来已经空了。"]],
+["制作发来消息：“这个镜头的摄影表秒数对不上。”",["连连道歉改正","把秒数和下一个镜头弄混了。多谢指出。"],["说“咦，应该没错啊……”再检查一遍","重新一看，真的和下一个镜头的秒数弄混了。"]],
+["画得太开心，原画画得密密麻麻。",["就这样交上去","被打回来：“动画师要哭了，请减少线条。”"],["减少线条，简化","动画师得救了。大家都幸福。"]],
+["看着前一位画师的原画愣住了。到底画的是什么？",["边推理边解读","谜底解开的瞬间有点爽。"],["去问作画监督","得到的回答是：“啊，这个我也不懂。”"]],
+["想要姿势参考，正在镜子前摆奇怪的姿势。",["用手机拍下来参考","没法给别人看的照片又多了。但好画多了。"],["凭想象画","关节不对劲。早知道就拍了。"]],
+["打开社交软件，同行的神作画刷了出来。",["受到刺激，干劲十足","好，我也来画。"],["和自己比较而消沉","大家都太厉害了。不过我的线条也不差。"]],
+["夜宵泡面好了。等三分钟的时候，不知不觉画起了画。",["就这样继续画","回过神来面已经泡发了。不过进度推进了。"],["好好等着再吃","没泡发的面，果然好吃。"]],
+["所有镜头都被打回重改。桌上全是便利贴。",["一个一个认真改","改了多少，画就好了多少。大概吧。"],["先深呼吸喝杯茶","冷静下来了。然而便利贴没有减少。"]],
+["突然状态爆棚！手自己动起来，表演行云流水。",["乘着这股势头","今天的镜头连自己都很满意。"],["先保存一下再继续","保存很重要。思路也没断。"]],
+["为了工作放的动画太吸引人，手停了下来。",["看完一集","被作画吸引住了。这也算学习吧，大概。"],["只听声音，回到工作","用耳朵享受。今天这样就够了。"]],
+["尺子和橡皮从桌上不翼而飞。",["到处翻找","结果就放在眼前。"],["用别的东西凑合","不是惯用的工具就是不踏实。"]],
+["找资料时，迷失在相关视频的海洋里。",["再多查一会儿","回过神来已经三个小时。忘了自己在找什么。"],["三十分钟就收手，开始画","资料不够，但画着画着就明白了。"]],
+["睡前想到了一个好点子……早上起来却想不起来了。",["没记笔记就睡了","那个构图去哪儿了呢。"],["在枕边放了便条再睡","早上一看，字看不清。不过还是留下了点什么。"]],
+["原画没画好，被转交给了别人。",["老实接受","工作少了，进度反而推进。但很不甘心。下次再努力。"],["不甘心，晚上自己练习","画过的份量，多少会进步……大概。"]],
+["来了个超出自己能力的镜头。给制作写邮件。",["发送“很抱歉。我做不到。”","花了三个小时才按下发送键。"],["勉强接下来","结果是痛苦地画完。"]],
+["同时接了好几份工作，所有截稿日都逼近了。",["想全部做完","每份都做到一半。预感赶不上。"],["排好优先级并联系对方","老实商量后，没想到对方帮忙调整了。"]],
+["刚接下一份低价的工作，高价工作的委托就来了。",["含泪拒绝","画低价工作的手，微微发抖。"],["偷偷接下","活儿变多了，两边都推不动。"]],
+["改完重改，又被打回，被叫去谈话：“你有干劲吗？”",["回答“有的”","有是有，只是技术跟不上。"],["拼命记下建议","记了笔记，心态稍微积极了些。"]],
+["工作时狠狠地想：“做完这份工作就辞职。”",["把这份心情化作动力","做完就辞职。……做完之后会怎样来着？"],["钻进被窝先忘掉","第二天早上，心情轻松了一点。"]],
+["有人问：“当动画师有趣吗？”",["回答“……嗯，还行。”","没法强烈肯定，却也无法否定。"],["笑着说“有时候很有趣”","这个坦诚的回答，连自己都稍微安心了。"]],
+["用纸作业时，摇了摇镜头袋，好像听到了钱的声音。",["就算是幻听也很开心","叮当。大概是错觉。不过，就算单价低，积少成多。"],["写进完成清单备忘","把完成的镜头写进清单。看着它增多，心情平静下来。"]],
+["作画监督的一句话：“这里的表演不错啊。”",["害羞地道谢","今天一整天都能心情愉快地画画。"],["不露声色地偷笑","回到家想起来，又偷笑了一次。"]],
+["自己参与的动画播出了。在社交软件上看到了观众的感想。",["怀着紧张的心情阅读","一句“作画很棒”，让一切都值得了。"],["悄悄划过去关掉","有点害羞，但有点开心。"]],
+["知名导演夸奖了你：“那个镜头很棒。”",["重看导演的作品","那段表演的节奏感，果然厉害。"],["写成文字留下笔记","把听到的话写了下来。难过的日子再读。"]],
+["听说喜欢的动画要举办蓝光发售试映会。",["不确定能不能去，先报名","按下了报名键。中了的话再和截稿日商量。"],["一个人喝酒庆祝","以喜欢的动画下酒，独自干杯。明天也继续画吧。"]],
+["想到了分镜里没有的表演。",["偷偷加进去试试","不知道能不能通过，但画的时候很开心。"],["没有自信，还是算了","悄悄擦掉了。不过那段表演有点可惜。"]],
+["有粉丝在社交软件上发了自己担任原画的镜头截图。",["把那条帖子截图保存","“充满干劲的图片”文件夹里又多了一张。"],["在心里握拳庆祝","表面面无表情，内心拼命挥拳。"]],
+["来看动画电影，非常精彩。片尾字幕开始滚动了。",["认真用眼睛追着看名字","找到了以前离职的前辈的名字，松了一口气。"],["不看字幕","优先考虑内心的安宁，夸了夸自己。"]],
+["回过神来，已经迷上了做饭。",["每天期待做什么菜","打开冰箱都开心。进度稍微慢了一点。"],["优先工作进度，减少费工夫的自炊","用简单的饭菜对付过去。有点寂寞。"]],
+["买了电视，发现自动插帧功能默认是开着的。",["含泪就这样放着","看着丝滑流动的画面，心里有什么轻轻哭了。"],["忍受不了，不惜一切关掉","在设置里翻了一个小时。不过正确的动作回来了。"]],
+["后辈说有不懂的地方……自己也不懂。",["说“回头再问问别人”，先糊弄过去","当场应付过去了。之后偷偷查一下。"],["自己也想知道，去向前辈确认","承认不懂需要一点勇气。不过一起学到了。"]],
+["想上厕所。可是现在笔下正顺。",["忍着继续画","画到了不错的地方。站起来时一切都到极限了。"],["好好去上厕所","舒畅了。连线条都感觉清爽了。"]]];
+var KZ=[["庆功宴大餐！","几天后被邀请参加庆功宴。吃了很多美味的饭菜，笑着回家。也许这就是努力的意义。"],["自己觉得很满足！","没有被捧成社交软件上的“神作画”。但就我自己而言，画出了相当满意的镜头。这就足够了。"],["“你进步了呢”","周围的人说“你进步了呢”。接着，下一份工作马上就来了。幸福的烦恼。"],["被官方账号截取了！","播出后，官方账号截取了自己负责的镜头。忍不住在屏幕前悄悄鼓了掌。"],["奖励甜点！","交稿后，买了一直忍着没买的高级甜点。吃了一口，不禁嘟囔：“我赢了。”"],["字幕里有我的名字！","播出那天，在片尾字幕里找到了自己的名字。看多少遍都觉得心里暖暖的。"],["悠闲三天","交稿后什么安排都没排，躺平了三天。幸福的时光。"],["前辈的慰劳","前辈送来热乎乎的慰劳：“辛苦了。”这份工作，坚持下来真好。"],["下一部作品在等着","收到消息：“下次也拜托你了。”一边幸福地尖叫，一边已经在想象新的镜头。"]];
+var HZ=[["在桌上睡着了……","醒来已是早晨。有人轻轻给我盖了毯子。今天好好休息，再接着画吧。"],["电量耗尽，沉沉入睡！","像没电一样睡着了。醒来发现枕边放着一个饭团。真感激。"],["强制午睡时间","同事说：“今天赶紧回家睡吧。”乖乖回家，被窝像天堂一样柔软。"],["梦里作画","睡着后在梦中，不知为何画得行云流水。醒来趁着没忘赶紧记了下来。"],["好好休养","果断决定休息一天。泡了澡，吃了饭，睡了个好觉。恢复后再接着画吧。"],["加入拉伸教室","腰和肩膀到极限了。下决心去上拉伸课。身体放松后，线条好像也变柔和了。"],["泡温泉暖暖身子","体力耗尽倒下后，在温泉里慢慢恢复。泡完喝的咖啡牛奶是世界上最好喝的。"],["零食堆成山","趴在桌上，周围的人送来了一堆零食。面对零食山，笑着满血复活。"],["买了新椅子","腰撑不住了，终于买了把好椅子。一坐下就像到了天堂。期待明天的工作。"],["早睡早起大作战","决定重新调整生活节奏。沐浴着晨光画出的画，线条比平时更明亮。"]];
+var MZ=[["换个心情的小旅行","为了调整心态，去了附近的温泉。在蒸汽里想着：“总会有办法的。”"],["和猫度过的一天","今天不画了，一整天只看猫咪视频。猫咪一句话也不说，却能治愈人心。"],["朋友听我倾诉","和朋友吃饭，尽情吐槽。笑着笑着，心里轻松了。"],["追完喜欢的动画","为了换心情，一口气追完了超喜欢的动画。想起了动画真好。感觉明天又能画了。"],["一个人的卡拉OK大会","下决心一个人去唱卡拉OK。放声高歌后，脑子清爽了。嗓子哑了，心却很有精神。"],["靠拉面复活","心情低落时，吃点好吃的最管用。热腾腾拉面的蒸汽，让心也暖和了起来。"],["散步时抬头看天","走出门抬头看天，云朵的形状看起来很好吃。光是这样，就让人微微一笑。"],["重看以前的原画","重看以前自己的原画，心想：“原来我挺努力的嘛。”稍微喜欢上了自己。"],["和同期线上喝酒","和同期隔着屏幕互相吐槽。大家烦恼的都是一样的事，笑个不停。"],["随手画了张轻松的画","把工作抛到脑后，随手涂鸦。即兴画的画，意外地可爱。"]];
+var RF=["Les traits ont coulé tout seuls.","Tout en bavardant, la main a bien avancé.","Une petite sieste de 30 minutes… qui a duré 2 heures.","L’air frais, ça fait du bien."];
+var FR=[["Le directeur d’animation demande des corrections : « Ajoute un peu plus de jeu ici. »",["Corriger sans discuter","C’est vraiment mieux. Un peu agaçant."],["Rendre tel quel en croyant que ça passera","Ça revient en retake."]],
+["Le chargé de production écrit : « Ça avance comment ? »",["Répondre « À 80 % »","En vrai, c’est 30 %. Ça fait un peu mal."],["Dire honnêtement « 30 % »","Réponse : « …Courage. »"]],
+["Tu ouvres YouTube pour une référence. Soudain, tu regardes des vidéos de chats.",["Regarder jusqu’au bout","Les chats ont toujours raison. Puis tu vois l’heure et tu pâlis."],["Fermer tout de suite","Bravo. Mais tu voulais voir les chats."]],
+["Le logiciel plante. Quand as-tu sauvegardé pour la dernière fois ?",["Tout refaire en pleurant","La deuxième fois, c’était plus rapide. Mystère."],["En fait, tu sauvegardais souvent","Merci, moi du passé."]],
+["2 h du matin. Les lumières de la supérette sont étrangement douces.",["Acheter une boisson énergisante et repartir","Les yeux grands ouverts, mais demain fait peur."],["Rentrer dormir","Le futon est moelleux."]],
+["Ton poignet droit est lourd. Une tendinite se profile.",["Mettre un patch et s’étirer","Ça va un peu mieux."],["Dessiner à la volonté","Tu as dessiné. Mais ta main hurle."]],
+["Message de la veille au soir : « L’ordre des plans a changé. »",["Gérer en silence","Tu as revérifié toutes les feuilles d’exposition."],["Dire « On ne m’a rien dit… » et s’effondrer sur le bureau","Ressuscité après trente secondes."]],
+["Un ami dit : « Travailler dans l’animation, ça doit être génial ! »",["Sourire et dire « C’est génial »","Tu te rappelles les vrais moments de bonheur."],["Dire « C’est génial, mais le temps… »","Une fois lancé, impossible de t’arrêter."]],
+["Un collègue pose une gourmandise sur ton bureau : « Mange ça. »",["Accepter avec gratitude","Le sucre se diffuse dans tout le corps."],["Dire « Plus tard… » et la laisser","Quand tu y repenses, elle a disparu."]],
+["La production écrit : « Les secondes de ce plan ne correspondent pas sur la feuille d’exposition. »",["S’excuser et corriger","Tu avais confondu avec le plan suivant. Remarque utile."],["Dire « Ah bon, pourtant… » et revérifier","En revérifiant, tu avais bien confondu avec le plan suivant."]],
+["Emporté par le plaisir, tu as dessiné les clés avec beaucoup trop de détails.",["Rendre tel quel","Retour : « Les intercalaires pleurent, merci de simplifier. »"],["Réduire les traits et simplifier","Les intercalaires sont sauvés. Tout le monde est heureux."]],
+["Tu bloques sur les clés de la personne précédente. Qu’a-t-elle dessiné ?",["Déchiffrer par déduction","Résoudre le mystère fait un peu plaisir."],["Aller demander au directeur d’animation","Réponse : « Ah, moi non plus, je ne comprends pas. »"]],
+["Tu as besoin d’une référence de pose et tu fais des poses bizarres devant le miroir.",["La photographier avec le téléphone","Les photos introuvables s’accumulent. Mais c’est plus facile à dessiner."],["Dessiner de tête","Les articulations clochent. Tu aurais dû photographier."]],
+["Sur les réseaux, un super dessin d’un collègue défile.",["S’inspirer et se motiver","Allez, je dessine aussi."],["Se comparer et déprimer","Tout le monde est incroyable. Mais mes traits ne sont pas mal non plus."]],
+["Les nouilles de minuit sont prêtes. Pendant les trois minutes d’attente, tu te mets à dessiner.",["Continuer à dessiner","Les nouilles ont ramolli. Mais tu as avancé."],["Attendre et manger comme il faut","Des nouilles pas ramollies, c’est forcément meilleur."]],
+["Retakes sur tous les plans. Le bureau est couvert de Post-it.",["Corriger un par un avec soin","Chaque correction améliore le dessin. Probablement."],["D’abord respirer et boire du thé","Calmé. Mais les Post-it n’ont pas diminué."]],
+["Soudain, tu es en pleine forme ! La main bouge toute seule, le jeu s’enchaîne.",["Surfer sur la vague","Tu aimes toi-même le plan d’aujourd’hui."],["Sauvegarder d’abord, puis continuer","Sauvegarder, c’est important. Le flux n’a pas été coupé."]],
+["L’anime lancé en fond sonore t’accroche et ta main s’arrête.",["Regarder un épisode jusqu’au bout","Tu t’es perdu dans l’animation. C’est aussi de l’étude, sans doute."],["N’écouter que le son et reprendre","Un plaisir pour les oreilles. Ça suffit pour aujourd’hui."]],
+["Ta règle et ta gomme ont disparu du bureau.",["Chercher partout","Elles étaient juste sous ton nez."],["Se débrouiller avec autre chose","Sans tes outils habituels, tu n’es pas à l’aise."]],
+["En cherchant des références, tu t’es perdu dans un océan de vidéos.",["Chercher encore un peu","Trois heures ont passé. Tu as oublié ce que tu cherchais."],["Arrêter au bout de 30 minutes et dessiner","Les références manquent, mais en dessinant, tu comprendras."]],
+["Avant de dormir, une bonne idée… et le matin, plus rien.",["Dormir sans noter","Où est passée cette composition ?"],["Dormir avec un mémo près de l’oreiller","Le matin, l’écriture était illisible. Mais il en restait quelque chose."]],
+["Tes clés n’étaient pas bonnes et le plan a été confié à quelqu’un d’autre.",["Accepter honnêtement","Moins de travail, donc la progression avance. Mais ça pique. À retenir."],["S’entraîner la nuit par dépit","Ce que tu dessines te fera un peu progresser… sans doute."]],
+["Un plan dépasse ton niveau. Tu écris à la production.",["Envoyer « Désolé. Je n’y arrive pas. »","Il t’a fallu trois heures pour appuyer sur envoyer."],["L’accepter quand même","Au final, tu l’as dessiné dans la douleur."]],
+["Tu as accepté plusieurs travaux à la fois et toutes les échéances approchent.",["Essayer de tout faire","Tout est à moitié fini. Tu sens que tu n’y arriveras pas."],["Prioriser et prévenir","Après une discussion honnête, on t’a étonnamment arrangé ça."]],
+["Juste après avoir accepté un travail mal payé, une demande bien payée arrive.",["Refuser à contrecœur","Ta main a un peu tremblé en dessinant le travail mal payé."],["L’accepter en cachette","Ta charge augmente, et aucun des deux n’avance."]],
+["Tu as refait le retake, mais il est revenu. Entretien : « Tu as vraiment envie ? »",["Répondre « Oui »","Oui, mais la technique ne suit pas."],["Noter les conseils frénétiquement","En prenant des notes, tu te sens un peu plus positif."]],
+["En travaillant, tu t’es juré : « Quand ce travail sera fini, je démissionne. »",["Transformer ce sentiment en énergie","Après, je démissionne. …Et après, qu’est-ce que je fais déjà ?"],["Se glisser sous la couette et oublier","Le lendemain matin, tu te sentais un peu plus léger."]],
+["On te demande : « Être animateur, c’est amusant ? »",["Répondre « …Oui, bof. »","Tu ne peux pas l’affirmer fort, mais tu ne peux pas le nier non plus."],["Sourire : « Parfois, oui »","Cette réponse honnête t’a un peu rassuré toi-même."]],
+["En travaillant sur papier, tu secoues la pochette du plan et tu crois entendre des pièces tinter.",["Même si c’est une hallucination, ça fait plaisir","Ding. Sans doute mon imagination. Mais même à petit tarif, les petits ruisseaux font les grandes rivières."],["L’ajouter à la liste des plans terminés","Tu as ajouté le plan terminé à la liste. La voir grandir t’apaise."]],
+["Un mot du directeur d’animation : « Joli jeu d’acteur, ici. »",["Remercier en rougissant","Tu dessineras de bonne humeur toute la journée."],["Sourire sans le montrer","En y repensant chez toi, tu as encore souri."]],
+["Un anime sur lequel tu as travaillé est diffusé. Tu trouves des avis sur les réseaux.",["Lire le cœur battant","Un « l’animation était superbe » a tout racheté."],["Faire défiler discrètement et fermer","Gênant, mais un peu content."]],
+["Un grand réalisateur te complimente : « Ce plan était excellent. »",["Revoir les œuvres du réalisateur","Le rythme de ce jeu d’acteur est vraiment impressionnant."],["Le mettre par écrit en note","Tu as noté ses paroles. À relire les jours difficiles."]],
+["Il paraît qu’il y a une avant-première pour la sortie Blu-ray d’un anime que tu adores.",["Postuler sans savoir si tu pourras y aller","Tu as appuyé sur Postuler. Si tu gagnes, on verra avec l’échéance."],["Trinquer seul","Un toast en solo, ton anime préféré en apéritif. On redessine demain."]],
+["Tu as une idée de jeu d’acteur absente du storyboard.",["La glisser en douce","Tu ne sais pas si ça passera, mais c’était amusant à dessiner."],["Renoncer, faute de confiance","Tu l’as discrètement effacé. Mais ce jeu d’acteur était un peu dommage."]],
+["Un fan a publié sur les réseaux une capture d’un plan dont tu as fait les clés.",["Capturer ce message","Le dossier « Boost de moral » compte une image de plus."],["Faire un « yes ! » dans ton cœur","Visage de marbre, mais le poing levé de toutes ses forces à l’intérieur."]],
+["Tu es venu voir un film d’animation, il est très beau. Le générique commence.",["Suivre les noms avec attention","Tu as trouvé le nom d’un ancien collègue parti, et tu as été soulagé."],["Ne pas regarder le générique","Tu as privilégié ta tranquillité d’esprit et tu t’es félicité."]],
+["Sans t’en rendre compte, tu t’es pris de passion pour la cuisine.",["Attendre chaque jour avec impatience ce que tu vas cuisiner","Ouvrir le frigo est un plaisir. La progression a un peu pris du retard."],["Privilégier le travail et cuisiner moins élaboré","Tu t’es débrouillé avec des repas simples. Un peu triste."]],
+["Tu as acheté une télé et découvert que l’interpolation d’images est activée par défaut.",["La laisser telle quelle à contrecœur","En voyant l’image trop fluide, quelque chose en toi a pleuré un peu."],["Ne pas supporter ça et la désactiver coûte que coûte","Une heure à fouiller les réglages. Mais le bon mouvement est revenu."]],
+["Un junior dit qu’il ne comprend pas quelque chose… toi non plus.",["Dire « On demandera plus tard » et passer à autre chose","Sur le moment, ça a marché. Tu chercheras discrètement plus tard."],["Vouloir savoir aussi, et demander à un senior","Avouer qu’on ne sait pas demande du courage. Mais vous avez appris ensemble."]],
+["Tu as envie d’aller aux toilettes. Mais ton crayon est en pleine forme.",["Se retenir et continuer à dessiner","Tu as dessiné jusqu’à un bon point. En te levant, tout était à la limite."],["Y aller comme il faut","Soulagé. Les traits aussi semblent soulagés."]]];
+var KF=[["Grand festin d’after !","Quelques jours plus tard, tu as été invité à la fête de fin de projet. Tu as mangé de bons plats à ta faim et tu es rentré en souriant. C’était peut-être pour ça que tu travaillais."],["Satisfait à ta façon !","Ce n’est pas devenu une « animation divine » virale. Mais, pour toi, tu as dessiné un plan plutôt satisfaisant. C’est largement suffisant."],["« Tu as progressé ! »","Les autres t’ont dit : « Tu as progressé. » Et on t’a aussitôt proposé le travail suivant. Un bonheur qui donne le tournis."],["Découpé par le compte officiel !","Après la diffusion, le compte officiel a extrait ton plan. Tu as applaudi discrètement devant l’écran."],["Un dessert en récompense !","Après la livraison, tu as acheté le dessert raffiné que tu te refusais. Une bouchée, et tu as murmuré : « J’ai gagné. »"],["Ton nom au générique !","Le jour de la diffusion, tu as trouvé ton nom au générique. Peu importe combien de fois tu le regardes, ça réchauffe le cœur."],["Trois jours de farniente","Après la livraison, tu n’as rien prévu et tu as paressé trois jours. Un vrai bonheur."],["Cadeau d’un senior","« Bon travail », t’a écrit un senior avec une douceur bien chaude. Tu es content d’avoir tenu bon."],["Le prochain projet t’attend","Un message est arrivé : « Pour le prochain aussi, compte sur toi. » Tu as poussé un cri de joie et tu imaginais déjà de nouveaux plans."]];
+var HF=[["Endormi sur le bureau…","Quand tu t’es réveillé, c’était le matin. Quelqu’un avait délicatement posé une couverture sur toi. Repose-toi aujourd’hui, et redessine demain."],["Batterie à plat, sommeil profond !","Tu t’es endormi comme une batterie vide. Au réveil, une boulette de riz t’attendait près de l’oreiller. Quelle attention."],["Sieste obligatoire","Un collègue a dit : « Rentre dormir aujourd’hui. » Tu as obéi, et le futon était un paradis."],["Dessiner en rêve","Dans ton rêve, dessiner était facile. Tu as noté cette sensation avant qu’elle ne s’efface."],["Un vrai repos","Tu as osé prendre un jour de repos : bain, bon repas, longue nuit. Quand tu auras récupéré, on redessinera."],["Inscrit au cours d’étirements","Dos et épaules au bout du rouleau. Tu as décidé de suivre un cours d’étirements. Ton corps s’assouplit, et tes traits aussi, semble-t-il."],["Détente aux sources chaudes","Après t’être effondré, tu as récupéré lentement dans un bain chaud. Le lait au café après le bain était le meilleur du monde."],["Montagne de friandises","Affalé sur ton bureau, tu as vu les friandises s’accumuler autour de toi. Tu as récupéré en riant devant cette montagne de snacks."],["Nouvelle chaise","Le dos à bout, tu as enfin acheté une bonne chaise. À peine assis, c’était le paradis. Tu as hâte d’être à demain."],["Plan lève-tôt","Tu as décidé de revoir ton rythme. Les dessins faits sous le soleil du matin ont des traits plus lumineux que d’habitude."]];
+var MF=[["Petite escapade","Pour te ressaisir, tu es allé aux sources chaudes. Dans la vapeur, tu as pensé : « Ça va s’arranger. »"],["Une journée avec des chats","Tu as arrêté de dessiner pour regarder des vidéos de chats toute la journée. Les chats réconfortent sans dire un mot."],["Un ami t’a écouté","Tu as dîné avec un ami et tu t’es plaint à cœur joie. À force de rire, tu t’es senti plus léger."],["Marathon d’anime","Pour te changer les idées, tu as enchaîné ton anime préféré. Tu t’es rappelé combien l’animation est belle. Demain, tu pourras sans doute redessiner."],["Karaoké en solo","Tu as osé aller au karaoké tout seul. En criant à pleins poumons, tu t’es vidé la tête. Gorge enrouée, cœur en forme."],["Ressuscité par un ramen","Quand le moral baisse, rien ne vaut un bon repas. La vapeur du ramen brûlant a aussi réchauffé ton cœur."],["Les yeux vers le ciel","Tu es sorti regarder le ciel et un nuage avait l’air délicieux. Rien que ça t’a fait sourire."],["Revoir tes anciennes clés","En revoyant tes anciens dessins, tu as pensé : « Finalement, j’ai bien travaillé. » Tu t’es un peu plus apprécié."],["Apéro en ligne entre collègues","Vous avez râlé ensemble en visio. Tout le monde peinait sur les mêmes choses, et vous n’arriviez plus à vous arrêter de rire."],["Un dessin tout en légèreté","Oubliant le travail, tu as griffonné. Ce dessin improvisé s’est avéré étonnamment mignon."]];
+function setL(l){L=l;document.documentElement.lang=l;document.getElementById("ttl").textContent=T[l].t;document.getElementById("sub").textContent=T[l].s;var b="";[["ja","日本語"],["en","EN"],["ko","한국어"],["zh","中文"],["fr","FR"]].forEach(function(x){b+='<button class="'+(x[0]==l?"on":"")+'" onclick="setL(\''+x[0]+'\')">'+x[1]+'</button>'});document.getElementById("lg").innerHTML=b;if(S)draw()}
+setL("ja");start();
 </script></body></html>
